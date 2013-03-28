@@ -1,24 +1,26 @@
 # -*- coding: utf-8 -*-
-"""
-    Convert relative urls and paths into absolute urls and paths
-"""
+'''
+Absolutize relative URLs in Articles.
 
+Useful to ensure RSS feeds include absolute URLs.
+
+'''
 from pelican import signals
-from lxml.html import fromstring, tostring
 from pelican.contents import Article
+
+from lxml.html import fromstring, tostring
 
 
 def _update_content(self, content, siteurl):
-    """
-    `Article.content` is an immutable property, so we have to monkey-patch 
-    the method that generates the content.
+    '''
+    Monkey-patch `article.content` to absolutize links relative to `siteurl`.
 
-    """
+    '''
     content = super(Article, self)._update_content(content, siteurl)
-    content = fromstring(content)
-    content.make_links_absolute(siteurl)
-
-    return tostring(content)
+    document = fromstring(content)
+    document.make_links_absolute(siteurl)
+    content = tostring(document)
+    return content
 
 
 def absolutize(sender):
