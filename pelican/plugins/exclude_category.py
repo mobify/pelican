@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-    Exclude customer exclusive articles from blog articles
+    Exclude the given category from article lists, author pages and tag pages
 """
 
 from pelican import signals
 from pelican.contents import Article
 
-def exclude_customer_exclusives(sender):
+def exclude_category(sender):
 
     import pdb;
     category_slug = sender.settings['EXCLUDED_CATEGORIES']
@@ -43,4 +43,4 @@ def exclude_customer_exclusives(sender):
                     author[1].remove(article)
 
 def register():
-    signals.article_generator_finalized.connect(exclude_customer_exclusives)
+    signals.article_generator_finalized.connect(exclude_category)
