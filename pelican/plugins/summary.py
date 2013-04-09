@@ -1,3 +1,7 @@
+"""
+Slightly customized summary plugin that allows for empty summaries.
+
+"""
 import types
 
 from pelican import signals
@@ -15,10 +19,11 @@ def initialized(pelican):
                                     '<!-- PELICAN_END_SUMMARY -->')
 
 def content_object_init(self_class, instance):
-    # if summary is already specified, use it
+    # If summary is already specified, use it.
     if 'summary' in instance.metadata:
         return
 
+    # Override `_get_content` to remove summary markers.
     def _get_content(self):
         content = self._content
         if self.settings['SUMMARY_BEGIN_MARKER']:
@@ -30,23 +35,32 @@ def content_object_init(self_class, instance):
         return content
     instance._get_content = types.MethodType(_get_content, instance)
 
-    # extract out our summary
-    if not hasattr(instance, '_summary') and instance._content is not None:
-        content = instance._content
-        begin_summary = -1
-        end_summary = -1
-        if instance.settings['SUMMARY_BEGIN_MARKER']:
-            begin_summary = content.find(instance.settings['SUMMARY_BEGIN_MARKER'])
-        if instance.settings['SUMMARY_END_MARKER']:
-            end_summary = content.find(instance.settings['SUMMARY_END_MARKER'])
-        if begin_summary != -1 or end_summary != -1:
-            # the beginning position has to take into account the length
-            # of the marker
-            begin_summary = (begin_summary +
-                            len(instance.settings['SUMMARY_BEGIN_MARKER'])
-                            if begin_summary != -1 else 0)
-            end_summary = end_summary if end_summary != -1 else None
-            instance._summary = content[begin_summary:end_summary]
+    content = instance._content
+    if hasattr(instance, '_summary') or content is None:
+        return
+
+    # The the summary.
+    start = -1
+    end = -1
+
+    if instance.settings['SUMMARY_BEGIN_MARKER']:
+        start = content.find(instance.settings['SUMMARY_BEGIN_MARKER'])
+
+    if instance.settings['SUMMARY_END_MARKER']:
+        end = content.find(instance.settings['SUMMARY_END_MARKER'])
+
+    if start != -1 or end != -1:
+        # the beginning position has to take into account the length
+        # of the marker
+        start = (start + len(instance.settings['SUMMARY_BEGIN_MARKER']) if start != -1 else 0)
+        end = end if end != -1 else None
+        instance._summary = content[start:end]
+
+    # Set an empty summary so templates can detect whether one was explictly set.
+    # @jb: We can't use `None` here as something throws an error later on.
+    else:
+        instance._summary = ""
+
 
 def register():
     signals.initialized.connect(initialized)
