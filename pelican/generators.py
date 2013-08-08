@@ -205,7 +205,7 @@ class ArticlesGenerator(Generator):
                                   self.settings['FEED_ALL_RSS'], feed_type='rss')
 
         for cat, category_articles in self.categories:
-            category_articles = [a for a in self.articles if a.date > after]
+            category_articles = [a for a in category_articles if a.date > after]
             category_articles.sort(key=attrgetter('date'), reverse=True)
 
             # @jb: Pass the category's `dict` so you can access the slug.
