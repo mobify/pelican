@@ -36,14 +36,17 @@ class Writer(object):
     def _add_item_to_the_feed(self, feed, item):
         # @jb: The code assumed `item.url` was relative.
         link = urlparse.urljoin(self.site_url, item.url)
-
         title = Markup(item.title).striptags()
+
+        # Try to get summary. If no summary's present, use the entire contents.
+        summary = item.summary or item.get_content(self.site_url)
+
         feed.add_item(
             title=title,
             link=link,
             unique_id='tag:%s,%s:%s' % (self.site_url.replace('http://', ''),
                                         item.date.date(), item.url),
-            description=item.get_content(self.site_url),
+            description=summary,
             categories=item.tags if hasattr(item, 'tags') else None,
             author_name=getattr(item, 'author', ''),
             pubdate=set_date_tzinfo(item.date,
